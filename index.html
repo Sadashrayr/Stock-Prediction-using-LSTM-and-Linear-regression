@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Price Prediction</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <h1>Stock Price Prediction</h1>
+    <form id="prediction-form">
+      <label for="data">Enter Data Points (comma-separated):</label>
+      <input type="text" id="data" placeholder="e.g., 1.2, 3.4, 5.6" required />
+      <button type="submit">Predict</button>
+    </form>
+    <div id="results" style="display: none">
+      <h2>Predictions</h2>
+      <p><strong>Linear Regression:</strong> <span id="lr-result"></span></p>
+      <p><strong>LSTM:</strong> <span id="lstm-result"></span></p>
+    </div>
+
+    <script>
+      document
+        .getElementById("prediction-form")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const dataInput = document.getElementById("data").value;
+
+          if (!dataInput.trim()) {
+            alert("Please enter some data points.");
+            return;
+          }
+
+          const data = dataInput.split(",").map(Number);
+
+          try {
+            const response = await fetch("/predict", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ data }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`Error: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+
+            document.getElementById("lr-result").textContent =
+              result.linear_regression_prediction.join(", ");
+            document.getElementById("lstm-result").textContent =
+              result.lstm_prediction.join(", ");
+            document.getElementById("results").style.display = "block";
+          } catch (error) {
+            alert(`Failed to fetch predictions: ${error.message}`);
+          }
+        });
+    </script>
+  </body>
+</html>
